@@ -4,5 +4,5 @@ import networkx as nx
 
 def tsp(G) :
     tsp = nx.approximation.traveling_salesman_problem
-    reseau = tsp(G, weight='weight', cycle=False, method=nx.approximation.greedy_tsp)
+    reseau = tsp(G, weight='weight', cycle=True, method=nx.approximation.greedy_tsp)
     return reseau
