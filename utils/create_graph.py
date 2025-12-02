@@ -8,13 +8,13 @@ def create_graph(bats, routes) :
     routes[["start","end"]] = routes.apply(lambda x: give_ends(x), axis=1, result_type="expand")
     routes["length"] = routes.geometry.length
 
-    G_total = create_G_total(routes)
+    G = create_G(routes)
 
-    bats["projection_route_coords"] = bats.projection_route.apply(lambda x: give_coords_point(x, G_total))
+    bats["projection_route_coords"] = bats.projection_route.apply(lambda x: give_coords_point(x, G))
 
-    G_final = create_G_final(bats, G_total)
+    G_list = get_components(G)
 
-    return G_final
+    return G_list, bats
 
 def give_ends(row):
     """A function to return a list of comma separated strings of rounded start and end coordinates,
@@ -29,10 +29,10 @@ def give_coords_point(point, G) :
     point_proj = nearest_node(G, point)
     return point_proj
 
-def create_G_total(routes) :
-    G_total = nx.Graph()
-    _ = routes.apply(lambda x: G_total.add_edge(x.start, x.end, length=x.length), axis=1)
-    return G_total
+def create_G(routes) :
+    G = nx.Graph()
+    _ = routes.apply(lambda x: G.add_edge(x.start, x.end, length=x.length), axis=1)
+    return G
 
 def nearest_node(G, point_str):
     # Convertir la chaîne 'x,y' en tuple float
@@ -45,19 +45,10 @@ def nearest_node(G, point_str):
     dists = [((nx - x)**2 + (ny - y)**2) for nx, ny in nodes]
     return list(G.nodes)[dists.index(min(dists))]
 
-def create_G_final(bats, G_total) :
-    G_final = nx.Graph()
+def get_components(G, k = 300) :
 
-    for i, target in bats.iterrows() :
-        proj_t = target.projection_route_coords
+    components_nodes = nx.connected_components(G)
 
-        for j, source in bats.iterrows() :
-            if j != i:
-                proj_s = source.projection_route_coords
+    components = [G.subgraph(x) for x in components_nodes]
 
-                path = nx.astar_path(G_total, proj_s, proj_t, weight="length")
-                length = nx.astar_path_length(G_total, proj_s, proj_t, weight="length")
-
-                G_final.add_edge(proj_s, proj_t, weight = length, path=path)
-    
-    return G_final
+    return components

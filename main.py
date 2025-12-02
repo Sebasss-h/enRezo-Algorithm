@@ -7,6 +7,44 @@ from utils.create_graph import create_graph
 from utils.tree import tree
 from utils.tracer_reseau import tracer_reseau
 from utils.export_reseau import export_reseau
+from utils.calcul_perf import calcul_perf
+from multiprocessing import Pool
+import time
+import csv
+
+def worker_reseau(id_zone, bats, routes) :
+
+    print(f"----- Calcul du réseau {id_zone} : {bats.shape[0]} batiments -----")
+
+    # 3.1 - Projection des batiments sur les routes
+    t_debut = time.time()
+    bats, routes = projection_route(bats, routes)
+    d_1 = time.time() - t_debut
+
+    # 3.2 - Création du graph
+    t_debut = time.time()
+    G_list, bats  = create_graph(bats, routes)
+    d_2 = time.time() - t_debut
+
+    # 3.3 - MST
+    t_debut = time.time()
+    reseaux = tree(G_list, bats)
+    d_3 = time.time() - t_debut
+
+    # 3.4 - Tracer le réseau
+    t_debut = time.time()
+    reseau_final = tracer_reseau(reseaux, routes, id_zone)
+    d_4 = time.time() - t_debut
+
+    # 3.5 - Calcul des performances
+    reseau_final_perf = calcul_perf(reseau_final, bats)
+
+    #print(f'{id_zone}, {bats.shape[0]} batiments : proj={d_1}, graph={d_2}, tree={d_3}, trace={d_4}')
+    with open('time.csv', 'a', newline='') as time_csv :
+        spamwriter = csv.writer(time_csv, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerow([id_zone,bats.shape[0],d_1, d_2, d_3, d_4])
+
+    return reseau_final_perf
 
 def main() :
 
@@ -16,38 +54,18 @@ def main() :
 
     # 2 - On découpe nos base de données par zone d'interets
     print("On découpe nos base de données")
-    id_zone_liste, bats_liste, routes_liste = split_db(bats_db, routes_db)
+    data_liste = split_db(bats_db, routes_db)
 
-    reseaux_finaux = []
+    # 3 - On trace les réseaux pour chaque zone d'interets avec du multiprocessing
+    print("On trace nos réseaux")
+    with open('time.csv', 'w', newline='') as time_csv :
+        spamwriter = csv.writer(time_csv, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerow(['ID', 'NbBats', 'Proj', 'Graph', 'Tree', 'Trace'])
+    
+    with Pool(processes = 8) as pool :
+        reseaux_finaux = pool.starmap(worker_reseau, data_liste)
 
-    # On trace les réseaux pour chaque zone d'interets
-
-    N = len(bats_liste)
-    for i in range(N) :
-
-        print(f"----- Calcul du réseau {i+1}/{N} -----")
-
-        id_zone = id_zone_liste[i]
-        bats = bats_liste[i]
-        routes = routes_liste[i]
-
-        print(f'Nombre de batiments : {bats.shape[0]}')
-
-        # 3 - Projection des batiments sur les routes
-        bats, routes = projection_route(bats, routes)
-
-        # 4 - Création du graph
-        G  = create_graph(bats, routes)
-
-        # 5 - TSP
-        reseau= tree(G)
-
-        # 6 - Tracer le réseau
-        reseau_final = tracer_reseau(reseau, routes, id_zone)
-
-        reseaux_finaux.append(reseau_final)
-
-    # 7 - Export
+    # Export
     print("Export")
     export_reseau(reseaux_finaux)
 

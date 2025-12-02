@@ -2,8 +2,17 @@
 
 import networkx as nx
 
-def tree(G) :
-    mst = nx.minimum_spanning_tree
-    T = mst(G, weight='weight', algorithm='kruskal')
-    reseau = sorted(T.edges(data=True))
-    return reseau
+def tree(G_list, bats) :
+
+    terminals = bats["projection_route_coords"].to_list()
+
+    reseaux = []
+
+    for G in G_list :
+        mst = nx.algorithms.approximation.steiner_tree
+        T = mst(G, terminals, weight='length', method='kou')
+
+        reseau = sorted(T.edges(data=True))
+        reseaux.append(reseau)
+
+    return reseaux

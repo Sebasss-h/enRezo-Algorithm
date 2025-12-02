@@ -9,8 +9,9 @@ def import_db() :
     return bats, routes
 
 def import_bats() :
-    bats = gpd.read_file("data/donnee_source/extrait/d44_batiment_zone_etude.gpkg")
+    bats = gpd.read_file("data/donnee_source/donnee_source/d44_batiment_zone.gpkg")
     bats = bats[["id_zone", "id_source", "besoin_chaud_2025", "geometry"]]
+    bats = bats[bats.id_zone != '44123c25000032']
     return bats
 
 def import_routes() :
