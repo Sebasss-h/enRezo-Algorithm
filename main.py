@@ -36,7 +36,9 @@ def worker_reseau(id_zone, bats, routes) :
     reseau_final = tracer_reseau(reseaux, routes, bats, id_zone)
     d_4 = time.time() - t_debut
 
-    # 3.5 - Calcul des performances
+    # 3.5
+
+    # 3.6 - Calcul des performances
     reseau_final_perf = calcul_perf(reseau_final, bats)
 
     #print(f'{id_zone}, {bats.shape[0]} batiments : proj={d_1}, graph={d_2}, tree={d_3}, trace={d_4}')
