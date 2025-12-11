@@ -7,6 +7,7 @@ from utils.create_graph import create_graph
 from utils.tree import tree
 from utils.tracer_reseau import tracer_reseau
 from utils.export_reseau import export_reseau
+from utils.meta_heuristic import meta_heuristic
 from utils.calcul_perf import calcul_perf
 from multiprocessing import Pool
 import time
@@ -31,12 +32,15 @@ def worker_reseau(id_zone, bats, routes) :
     reseaux = tree(G_list, bats)
     d_3 = time.time() - t_debut
 
-    # 3.4 - Tracer le réseau
+    # 3.4 - Meta-heuristique
     t_debut = time.time()
-    reseau_final = tracer_reseau(reseaux, routes, bats, id_zone)
+    reseaux_meta = meta_heuristic(reseaux)
     d_4 = time.time() - t_debut
 
-    # 3.5
+    # 3.5 - Tracer le réseau
+    t_debut = time.time()
+    reseau_final = tracer_reseau(reseaux_meta, routes, bats, id_zone)
+    d_5 = time.time() - t_debut
 
     # 3.6 - Calcul des performances
     reseau_final_perf = calcul_perf(reseau_final, bats)
@@ -44,7 +48,7 @@ def worker_reseau(id_zone, bats, routes) :
     #print(f'{id_zone}, {bats.shape[0]} batiments : proj={d_1}, graph={d_2}, tree={d_3}, trace={d_4}')
     with open('time.csv', 'a', newline='') as time_csv :
         spamwriter = csv.writer(time_csv, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        spamwriter.writerow([id_zone,bats.shape[0],d_1, d_2, d_3, d_4])
+        spamwriter.writerow([id_zone,bats.shape[0],d_1, d_2, d_3, d_5, d_4])
 
     return reseau_final_perf
 
@@ -62,7 +66,7 @@ def main() :
     print("On trace nos réseaux")
     with open('time.csv', 'w', newline='') as time_csv :
         spamwriter = csv.writer(time_csv, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        spamwriter.writerow(['ID', 'NbBats', 'Proj', 'Graph', 'Tree', 'Trace'])
+        spamwriter.writerow(['ID', 'NbBats', 'Proj', 'Graph', 'Tree', 'Trace', 'Meta'])
     
     with Pool(processes = 8) as pool :
         reseaux_finaux = pool.starmap(worker_reseau, data_liste)

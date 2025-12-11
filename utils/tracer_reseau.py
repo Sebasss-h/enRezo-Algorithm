@@ -7,12 +7,11 @@ import shapely as shp
 def tracer_reseau(reseaux, routes, bats, id_zone) :
 
     reseaux_linestring = creer_reseaux_linestring(reseaux, routes, id_zone)
+    reseaux_linestring = rattacher_orphelins(reseaux_linestring, bats, id_zone)
     reseau_linestring = concat_reseaux_linestring(reseaux_linestring, id_zone)
 
     if len(reseaux_linestring.index) == 0 :
         reseau_linestring = reseau_batiments_sans_route(bats.copy(), id_zone)
-    else :
-        reseau_linestring = rattacher_orphelins(reseau_linestring, bats, id_zone)
     
     return reseau_linestring
 
