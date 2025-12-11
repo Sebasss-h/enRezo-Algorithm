@@ -2,17 +2,23 @@
 
 import networkx as nx
 
-def tree(G_list, bats) :
+def tree(G_list, bats):
 
-    terminals = bats["projection_route_coords"].to_list()
+    terminals = bats["projection_route_coords"].tolist()
 
     reseaux = []
 
-    for G in G_list :
-        mst = nx.algorithms.approximation.steiner_tree
-        T = mst(G, terminals, weight='length', method='kou')
+    for G in G_list:
 
-        reseau = sorted(T.edges(data=True))
-        reseaux.append(reseau)
+        sub_terminals = [t for t in terminals if t in G.nodes]
+
+        if len(sub_terminals) <= 1:
+            continue
+
+        T = nx.algorithms.approximation.steiner_tree(
+                G, sub_terminals, weight='length', method='kou'
+            )
+
+        reseaux.append(sorted(T.edges(data=True)))
 
     return reseaux

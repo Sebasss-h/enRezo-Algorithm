@@ -33,7 +33,7 @@ def worker_reseau(id_zone, bats, routes) :
 
     # 3.4 - Tracer le réseau
     t_debut = time.time()
-    reseau_final = tracer_reseau(reseaux, routes, id_zone)
+    reseau_final = tracer_reseau(reseaux, routes, bats, id_zone)
     d_4 = time.time() - t_debut
 
     # 3.5 - Calcul des performances
@@ -50,7 +50,7 @@ def main() :
 
     # 1 - On importe nos base de données
     print("On importe nos base de données")
-    bats_db, routes_db = import_db()
+    bats_db, routes_db, crs = import_db()
 
     # 2 - On découpe nos base de données par zone d'interets
     print("On découpe nos base de données")
@@ -67,7 +67,7 @@ def main() :
 
     # Export
     print("Export")
-    export_reseau(reseaux_finaux)
+    export_reseau(reseaux_finaux, crs)
 
 if __name__ == '__main__':
     main()
