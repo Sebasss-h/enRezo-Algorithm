@@ -55,19 +55,18 @@ def concat_reseaux_linestring(reseaux_linestring, id_zone):
     nb_comp = reseaux_linestring.shape[0]
     reseau_linestring_geometries = reseaux_linestring.geometry
     reseau_linestring_geometry = reseau_linestring_geometries.pop(0)
+    reseau_linestring = reseau_linestring.drop(index=0).reset_index(drop=True)
 
-    for _ in range(nb_comp - 1):
+    for _ in range(nb_comp-1):
         lines_between_reseaux = reseau_linestring_geometries.shortest_line(reseau_linestring_geometry)
 
         lines_between_reseaux = lines_between_reseaux.reset_index(drop=True)
-        length_between_reseaux = lines_between_reseaux.geometry.length.reset_index(drop=True)
+        lines_between_reseaux = gpd.GeoDataFrame(geometry=gpd.GeoSeries(lines_between_reseaux))
+        lines_between_reseaux['len'] = lines_between_reseaux.geometry.length
 
-        closest_id = length_between_reseaux.idxmin()
+        closest_id = lines_between_reseaux['len'].idxmin()
 
-        if closest_id not in lines_between_reseaux.index:
-            closest_id = 0
-
-        closest_line = shp.MultiLineString([lines_between_reseaux.loc[closest_id]])
+        closest_line = shp.MultiLineString([lines_between_reseaux.geometry.loc[closest_id]])
 
         closest_reseau = reseau_linestring.loc[closest_id, 'geometry']
         reseau_linestring = reseau_linestring.drop(index=closest_id).reset_index(drop=True)
@@ -129,7 +128,7 @@ def rattacher_orphelins(reseau_gdf, bats, id_zone):
         
         if reseau_union.distance(point_acces) > 0.1:
             
-            ligne = shp.shortest_line(point_acces, reseau_union)
+            ligne = shp.MultiLineString([shp.shortest_line(point_acces, reseau_union)])
             lignes_raccord.append(ligne)
 
     if lignes_raccord:

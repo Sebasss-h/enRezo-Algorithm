@@ -54,6 +54,8 @@ def worker_reseau(id_zone, bats, routes) :
 
 def main() :
 
+    t_total_debut = time.time()
+
     # 1 - On importe nos base de données
     print("On importe nos base de données")
     bats_db, routes_db, crs = import_db()
@@ -74,6 +76,9 @@ def main() :
     # Export
     print("Export")
     export_reseau(reseaux_finaux, crs)
+
+    t_total = time.time() - t_total_debut
+    print(f'Temps de calcul : {t_total}')
 
 if __name__ == '__main__':
     main()
