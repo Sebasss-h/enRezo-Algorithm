@@ -1,4 +1,5 @@
 ### Performe le TSP sur la graph entre les batiments avec la densité comme poids
+from utils.trim_leaves import trim_leaves
 
 import networkx as nx
 
@@ -18,7 +19,9 @@ def tree(G_list, bats):
         T = nx.algorithms.approximation.steiner_tree(
                 G, sub_terminals, weight='length', method='kou'
             )
+        
+        T_trimmed = trim_leaves(T, bats, terminals)
 
-        reseaux.append(sorted(T.edges(data=True)))
+        reseaux.append(sorted(T_trimmed.edges(data=True)))
 
     return reseaux

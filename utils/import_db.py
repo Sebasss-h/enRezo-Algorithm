@@ -2,7 +2,6 @@
 
 import geopandas as gpd
 
-
 def import_db() :
     bats = import_bats()
     routes = import_routes()
