@@ -14,7 +14,7 @@ def calcul_length(reseau) :
     return reseau
 
 def calcul_density(reseau, bats) :
-    length = reseau.length
+    length = reseau.length.values[0]
     besoin_chaleur = bats.besoin_chaud_2025.sum()
     reseau['besoin_chaleur'] = besoin_chaleur
     if length == 0 :
