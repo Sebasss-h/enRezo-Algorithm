@@ -17,9 +17,9 @@ def get_leaves(G, terminals) :
 def get_parents(G, leaf) :
     parents = [leaf]
     parent = list(G.neighbors(leaf))[0]
-    while G.degree(leaf) == 2 :
+    while G.degree(parent) == 2 :
         parents.append(parent)
-        parent = [n for n in G.nodes() if (n not in parents)][0]
+        parent = [n for n in G.neighbors(parent) if (n not in parents)][0]
     return parents
 
 def lower_density(G, bats, parents):

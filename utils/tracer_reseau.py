@@ -21,6 +21,16 @@ def creer_reseaux_linestring(reseaux, routes, id_zone) :
 
     for reseau in reseaux :
 
+        if reseau[0] == "empty" :
+            continue
+
+        elif reseau[0] == "alone" :
+            x, y = reseau[1].split(",")
+            reseau_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(shp.LineString([(x, y), (x, y)])))
+            reseau_linestring['id_zone'] = id_zone
+            reseaux_linestring_gdf.append(reseau_linestring)
+            continue
+
         reseau_linestring = []
 
         for edge in reseau :
