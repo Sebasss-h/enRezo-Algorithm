@@ -13,6 +13,9 @@ from multiprocessing import Pool
 import time
 import csv
 
+### Variables globales ###
+trim = False
+
 def worker_reseau(id_zone, bats, routes) :
 
     print(f"----- Calcul du réseau {id_zone} : {bats.shape[0]} batiments -----")
@@ -29,7 +32,7 @@ def worker_reseau(id_zone, bats, routes) :
 
     # 3.3 - MST
     t_debut = time.time()
-    reseaux = tree(G_list, bats)
+    reseaux = tree(G_list, bats, trim)
     d_3 = time.time() - t_debut
 
     # 3.4 - Meta-heuristique
