@@ -1,11 +1,8 @@
 ### Performe le TSP sur la graph entre les batiments avec la densité comme poids
-from utils.trim_leaves import trim_leaves
-
-from utils.trim_leaves import trim_leaves
 
 import networkx as nx
 
-def tree(G_list, bats, trim):
+def tree(G_list, bats):
 
     terminals = bats["projection_route_coords"].tolist()
 
@@ -17,26 +14,35 @@ def tree(G_list, bats, trim):
         sub_terminals = list(dict.fromkeys(sub_terminals)) # On enleve les doublons
 
         if len(sub_terminals) == 0:
-            reseaux.append(["empty"])
             continue
         elif len(sub_terminals) == 1:
-            reseaux.append(("alone", sub_terminals[0]))
+            reseaux.append(G.subgraph(sub_terminals))
             continue
 
         T = nx.algorithms.approximation.steiner_tree(
                 G, sub_terminals, weight='length', method='kou'
             )
         
-        T_trimed = trim_leaves(T, bats, terminals)
-
-        if trim :
-            T_trimmed = trim_leaves(T, bats, terminals)
+        if nx.is_empty(T) :
+            continue
         else :
-            T_trimmed = T
-
-        if T_trimmed == [] :
-            reseaux.append(["empty"])
-        else :
-            reseaux.append(sorted(T_trimmed.edges(data=True)))
+            G = copy_graph(T)
+            reseaux.append(G)
 
     return reseaux
+
+def copy_graph(G):
+    
+    new_G = nx.Graph()
+    
+    # 1. Copie des noeuds (sans fonctions)
+    for n, attr in G.nodes(data=True):
+        safe_attr = {k: v for k, v in attr.items() if not callable(v)}
+        new_G.add_node(n, **safe_attr)
+        
+    # 2. Copie des arêtes (sans fonctions)
+    for u, v, attr in G.edges(data=True):
+        safe_attr = {k: v for k, v in attr.items() if not callable(v)}
+        new_G.add_edge(u, v, **safe_attr)
+    
+    return new_G

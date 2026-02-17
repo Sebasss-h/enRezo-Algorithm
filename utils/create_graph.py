@@ -12,8 +12,8 @@ def create_graph(bats, routes) :
 
     G = create_G(routes)
 
-    bats["projection_route_coords"] = bats.projection_route.apply(lambda x: give_coords_point(x, G))
-
+    bats["projection_route_coords"] = bats.apply(lambda x: give_coords_point(x.projection_route, x.besoin_chaud_2025, G), axis = 1)
+    
     G_list = get_components(G)
 
     return G_list, bats
@@ -26,14 +26,17 @@ def give_ends(row):
     end = ','.join([str(round(x,0)) for x in line_coords[-1]])
     return [start, end]
 
-def give_coords_point(point, G) :
+def give_coords_point(point, demande, G) :
     point = ','.join([str(round(x,0)) for x in point.coords[0]])
     point_proj = nearest_node(G, point)
+    G.nodes[point_proj]["demande"] = demande
     return point_proj
 
 def create_G(routes) :
     G = nx.Graph()
-    _ = routes.apply(lambda x: G.add_edge(x.start, x.end, length=x.length), axis=1)
+    _ = routes.apply(lambda x: G.add_edge(x.start, x.end, length=x.length, straight=False), axis=1)
+    for n in G.nodes():
+        G.nodes[n]["demande"] = 0
     return G
 
 def nearest_node(G, point_str):

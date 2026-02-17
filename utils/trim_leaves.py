@@ -2,11 +2,17 @@
 
 import networkx as nx
 
-def trim_leaves(G, bats, terminals) :
+min_density = 1.5
+
+def trim_leaves(G, bats) :
+    terminals = bats["projection_route_coords"].tolist()
     leaves = get_leaves(G, terminals)
+    density = compute_density(G, bats)
     for leaf in leaves :
+        if density > min_density :
+            break
         parents = get_parents(G, leaf)
-        G = lower_density(G, bats, parents)
+        G, density = increase_density(G, bats, parents)
     return G
 
 def get_leaves(G, terminals) :
@@ -22,7 +28,7 @@ def get_parents(G, leaf) :
         parent = [n for n in G.neighbors(parent) if (n not in parents)][0]
     return parents
 
-def lower_density(G, bats, parents):
+def increase_density(G, bats, parents):
     G2 = G.copy()
 
     length_total = sum(a['length'] for _,_,a in G2.edges(data=True))
@@ -43,6 +49,18 @@ def lower_density(G, bats, parents):
         density_new = heat_new/length_new
     
     if density_new > density_total :
-        return G2
+        return G2, density_new
     else :
-        return G
+        return G, density_total
+
+def compute_density(G, bats) :
+    G2 = G.copy()
+
+    length_total = sum(a['length'] for _,_,a in G2.edges(data=True))
+    heat_total = bats.besoin_chaud_2025.sum()
+    if length_total == 0 :
+        density_total = 0
+    else :
+        density_total = heat_total/length_total
+    
+    return density_total

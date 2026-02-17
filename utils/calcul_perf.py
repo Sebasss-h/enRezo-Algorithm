@@ -2,7 +2,7 @@
 
 def calcul_perf(reseau, bats) :
 
-    if len(reseau.index) == 0 :
+    if reseau.empty :
         return reseau
     
     reseau = calcul_length(reseau)

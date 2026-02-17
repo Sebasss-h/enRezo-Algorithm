@@ -1,96 +1,63 @@
 ### Trace le réseau de chaleur à partir du resultat du tsp
 
-import pandas as pd
 import geopandas as gpd
 import shapely as shp
 
-def tracer_reseau(reseaux, routes, bats, id_zone) :
+def tracer_reseau(reseau, routes, bats, id_zone, crs) :
 
-    reseaux_linestring = creer_reseaux_linestring(reseaux, routes, id_zone)
-    reseau_linestring = concat_reseaux_linestring(reseaux_linestring, id_zone)
+    reseau_linestring, reseau_gdf = creer_reseaux_linestring(reseau, routes, id_zone, crs)
 
-    if len(reseaux_linestring.index) == 0 :
-        reseau_linestring = reseau_batiments_sans_route(bats.copy(), id_zone)
+    if reseau_linestring.empty :
+        reseau_linestring, reseau_gdf = reseau_batiments_sans_route(bats.copy(), id_zone, crs)
     
-    return reseau_linestring
+    return reseau_linestring, reseau_gdf
 
 
-def creer_reseaux_linestring(reseaux, routes, id_zone) :
+def creer_reseaux_linestring(reseau, routes, id_zone, crs) :
     
-    reseaux_linestring_gdf = []
+    if len(reseau.nodes()) == 0 :
+        return gpd.GeoDataFrame(), gpd.GeoDataFrame()
+    elif len(reseau.nodes()) == 1 :
+        x, y = map(float, sorted(reseau.nodes())[0].split(','))
+        return gpd.GeoDataFrame([{'geometry':shp.Point(x, y), 'id_zone':id_zone, 'demande_total':0}], crs=crs), gpd.GeoDataFrame([{'geometry':shp.Point(x, y), 'id_zone':id_zone, 'demande_total':0}], crs=crs)
 
-    for reseau in reseaux :
+    liste_troncon = []
 
-        if reseau[0] == "empty" :
-            continue
+    for edge in sorted(reseau.edges(data=True)):
+        p1 = edge[0]
+        p2 = edge[1]
 
-        elif reseau[0] == "alone" :
-            x, y = reseau[1].split(",")
-            reseau_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(shp.LineString([(x, y), (x, y)])))
-            reseau_linestring['id_zone'] = id_zone
-            reseaux_linestring_gdf.append(reseau_linestring)
-            continue
+        demande_total = edge[2]["demande_total"]
 
-        reseau_linestring = []
-
-        for edge in reseau :
-            p1 = edge[0]
-            p2 = edge[1]
-
+        geometry = NotImplemented
+        if edge[2]["straight"] :
+            x1, y1 = map(float, p1.split(','))
+            x2, y2 = map(float, p2.split(','))
+            geometry = shp.LineString([(x1, y1), (x2, y2)])
+        else :
             route = routes[((routes["start"] == p1) & (routes["end"] == p2)) | ((routes["start"] == p2) & (routes["end"] == p1))]
             if not route.empty :
-                reseau_linestring.append(route.geometry.values[0])
+                geometry = route.geometry.values[0]
         
-        if reseau_linestring != [] :
-            reseau_multilinestring = shp.MultiLineString(reseau_linestring)
-            reseau_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(reseau_multilinestring))
-            reseau_linestring['id_zone'] = id_zone
-            reseaux_linestring_gdf.append(reseau_linestring)
+        if geometry is not None :
+            liste_troncon.append({'geometry':geometry,
+                                  'id_zone':id_zone,
+                                  'demande_total':demande_total})
+        
+    if liste_troncon :
 
-    if reseaux_linestring_gdf != [] :
-        reseaux_linestring_gdf = pd.concat(reseaux_linestring_gdf, ignore_index=True)
+        reseau_multilinestring = shp.MultiLineString([troncon["geometry"] for troncon in liste_troncon])
+        reseau_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(reseau_multilinestring), crs=crs)
+        reseau_linestring['id_zone'] = id_zone 
+
+        reseau_gdf = gpd.GeoDataFrame(liste_troncon)
+        reseau_gdf.set_crs(crs, inplace=True)
+
+        return reseau_linestring, reseau_gdf
     else :
-        reseaux_linestring_gdf = gpd.GeoDataFrame()
-    
-    return reseaux_linestring_gdf
+        return gpd.GeoDataFrame(), gpd.GeoDataFrame()
 
-def concat_reseaux_linestring(reseaux_linestring, id_zone):
-
-    if len(reseaux_linestring.index) == 0 :
-        return gpd.GeoDataFrame()
-
-    reseau_linestring = reseaux_linestring
-
-    nb_comp = reseaux_linestring.shape[0]
-    reseau_linestring_geometries = reseaux_linestring.geometry
-    reseau_linestring_geometry = reseau_linestring_geometries.pop(0)
-    reseau_linestring = reseau_linestring.drop(index=0).reset_index(drop=True)
-
-    for _ in range(nb_comp-1):
-        lines_between_reseaux = reseau_linestring_geometries.shortest_line(reseau_linestring_geometry)
-
-        lines_between_reseaux = lines_between_reseaux.reset_index(drop=True)
-        lines_between_reseaux = gpd.GeoDataFrame(geometry=gpd.GeoSeries(lines_between_reseaux))
-        lines_between_reseaux['len'] = lines_between_reseaux.geometry.length
-
-        closest_id = lines_between_reseaux['len'].idxmin()
-
-        closest_line = shp.MultiLineString([lines_between_reseaux.geometry.loc[closest_id]])
-
-        closest_reseau = reseau_linestring.loc[closest_id, 'geometry']
-        reseau_linestring = reseau_linestring.drop(index=closest_id).reset_index(drop=True)
-        reseau_linestring_geometries = reseau_linestring.geometry
-
-        reseau_linestring_geometry = shp.unary_union(
-            gpd.GeoSeries([reseau_linestring_geometry, closest_line, closest_reseau])
-        )
-
-    reseau_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(reseau_linestring_geometry))
-    reseau_linestring['id_zone'] = id_zone
-
-    return reseau_linestring
-
-def reseau_batiments_sans_route(bats, id_zone) :
+def reseau_batiments_sans_route(bats, id_zone, crs) :
 
     nb_bats = bats.shape[0]
     bats_geometries =  bats.geometry
@@ -112,14 +79,26 @@ def reseau_batiments_sans_route(bats, id_zone) :
         if closest_id not in lines_between_bats.index:
             closest_id = 0
         
-        lines.append(lines_between_bats.loc[closest_id])
+        shortest_line = lines_between_bats.iloc[closest_id]
 
         bats = bats.drop(index=closest_id).reset_index(drop=True)
+        demande_total = bats.besoin_chaud_2025
         bats_geometries = bats.geometry
 
-    reseau_bats_linestring = shp.MultiLineString(lines)
+        lines.append({"geometry":shortest_line,
+                      "id_zone":id_zone,
+                      "demande_total":demande_total})
 
-    reseau_bats = gpd.GeoDataFrame(geometry=gpd.GeoSeries(reseau_bats_linestring))
-    reseau_bats['id_zone'] = id_zone
+    if lines :
 
-    return reseau_bats
+        reseau_bats_multilinestring = shp.MultiLineString(lines)
+        reseau_bats_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(reseau_bats_multilinestring), crs=crs)
+        reseau_bats_linestring['id_zone'] = id_zone
+
+        reseau_bats_gdf = gpd.GeoDataFrame(lines)
+        reseau_bats_gdf.set_crs(crs, inplace=True)
+        
+        return reseau_bats_linestring, reseau_bats_gdf
+    
+    else :
+        return gpd.GeoDataFrame(), gpd.GeoDataFrame()
