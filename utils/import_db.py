@@ -12,8 +12,6 @@ def import_db() :
 def import_bats() :
     bats = gpd.read_file("data/donnee_source/donnee_source/d44_batiment_zone.gpkg")
     bats = bats[["id_zone", "id_source", "besoin_chaud_2025", "geometry"]]
-    #bats = bats[~bats["id_zone"].isin(['44123c25000032'])]
-    #bats = bats[bats["id_zone"].isin(["44123c25000257"])]
     return bats
 
 def import_routes() :

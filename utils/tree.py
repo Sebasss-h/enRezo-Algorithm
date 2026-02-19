@@ -1,4 +1,4 @@
-### Performe le TSP sur la graph entre les batiments avec la densité comme poids
+### Approxime l'arbre couvrant minimum sur la graph entre les batiments
 
 import networkx as nx
 

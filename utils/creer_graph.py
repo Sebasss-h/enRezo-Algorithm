@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 
-def create_graph(bats, routes) :
+def creer_graph(bats, routes) :
 
     routes[["start","end"]] = routes.apply(lambda x: give_ends(x), axis=1, result_type="expand")
     routes["length"] = routes.geometry.length
@@ -19,10 +19,9 @@ def create_graph(bats, routes) :
     return G_list, bats
 
 def give_ends(row):
-    """A function to return a list of comma separated strings of rounded start and end coordinates,
-    Example: ['623373.0,6903082.0', '623386.0,6902378.0']"""
-    line_coords = list(row.geometry.coords) #Create a list of all line coordinates
-    start = ','.join([str(round(x,0)) for x in line_coords[0]]) #A string, like '623373.0,6903082.0'
+    # Retourne les sommets correspondants aux extremités de la route
+    line_coords = list(row.geometry.coords) #Creer une liste des toute les coordonnées
+    start = ','.join([str(round(x,0)) for x in line_coords[0]])
     end = ','.join([str(round(x,0)) for x in line_coords[-1]])
     return [start, end]
 
@@ -70,10 +69,9 @@ def get_components(G, k_max=500):
     return all_clusters
 
 def split_graph(G, nodes_subset, k_max):
-    """
-    Découpe un sous-graphe en utilisant la contrainte de connectivité.
-    Cela évite d'avoir des clusters 'bizarres' qui suivent la géométrie mais pas les routes.
-    """
+    # Découpe un sous-graphe en utilisant la contrainte de connectivité.
+    # Cela évite d'avoir des clusters 'bizarres' qui suivent la géométrie mais pas les routes.
+
     sub_G = G.subgraph(nodes_subset).copy()
     
     # On récupère les coordonnées pour le clustering

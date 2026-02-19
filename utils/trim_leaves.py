@@ -1,7 +1,6 @@
 ### Enleve les feuilles qui baissent la densité
 
-import networkx as nx
-
+# Definition de la plus petite desnité acceptable
 min_density = 1.5
 
 def trim_leaves(G, bats) :
@@ -21,6 +20,7 @@ def get_leaves(G, terminals) :
     return leaves
 
 def get_parents(G, leaf) :
+    # Retourne les parents de la feuille jusqu'à une intersection (degre > 2)
     parents = [leaf]
     parent = list(G.neighbors(leaf))[0]
     while G.degree(parent) == 2 :
@@ -29,6 +29,7 @@ def get_parents(G, leaf) :
     return parents
 
 def increase_density(G, bats, parents):
+    # Regarde si la densité augmente en enlevant toute la branche (feuille et parents)
     G2 = G.copy()
 
     length_total = sum(a['length'] for _,_,a in G2.edges(data=True))
@@ -54,6 +55,7 @@ def increase_density(G, bats, parents):
         return G, density_total
 
 def compute_density(G, bats) :
+    # Calcul la densité d'un reseau
     G2 = G.copy()
 
     length_total = sum(a['length'] for _,_,a in G2.edges(data=True))

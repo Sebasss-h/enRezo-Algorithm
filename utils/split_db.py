@@ -1,10 +1,10 @@
-### Split the big geodb for batiments and roads into a list of geodb for each zone of interest
+### Decoupe la base de données complete en plusieurs dataset representant chacun une zone d'interet
 
 import geopandas as gpd
 import shapely as shp
 
 def split_db(bats_db, routes_db) :
-    ### return list of (bats, routes) for every zone
+    ### Retourne la liste (bats, routes) pour chaque zone
 
     id_zone_liste = bats_db.id_zone.unique()
 
@@ -25,6 +25,7 @@ def split_db(bats_db, routes_db) :
     return data_liste
 
 def get_boundaries(gdf, k) :
+    # Retourne un regtangle englobant tous les batiments de la zone avec une marge
 
     boundaries = gdf.geometry.bounds
 

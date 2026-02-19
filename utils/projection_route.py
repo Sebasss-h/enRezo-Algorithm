@@ -1,15 +1,15 @@
 ### Projette les batiments sur la route la plus proche
 
+from utils.split_db import get_boundaries
+
 import pandas as pd
 import geopandas as gpd
 import shapely
 from shapely.geometry import LineString, Point
-from utils.split_db import get_boundaries
 
 def projection_route(bats, routes):
-    """
-    Projette tous les bâtiments sur leur route la plus proche et met à jour le GeoDataFrame routes.
-    """
+    #Projette tous les bâtiments sur leur route la plus proche et met à jour le GeoDataFrame routes.
+
     new_routes = routes.copy()
 
     projections = []
@@ -25,10 +25,8 @@ def projection_route(bats, routes):
     return bats, new_routes
 
 def find_proj_route(poly, routes):
-    """
-    Projette un bâtiment sur la route la plus proche, découpe la route au point projeté,
-    et met à jour le GeoDataFrame routes en explosant les morceaux si nécessaire.
-    """
+    #Projette un batiment sur la route la plus proche, découpe la route au point projeté,
+    #et met à jour le GeoDataFrame routes en explosant les morceaux si nécessaire.
 
     poly_boundary = get_boundaries(gpd.GeoDataFrame({'geometry':[poly]}), k=100)
     lines = gpd.clip(routes.copy(), poly_boundary, keep_geom_type=True)

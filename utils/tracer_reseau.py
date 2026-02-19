@@ -1,4 +1,4 @@
-### Trace le réseau de chaleur à partir du resultat du tsp
+### Transforme l'arbre sous forme de graph en un objet shapely geometrique
 
 import geopandas as gpd
 import shapely as shp
@@ -14,6 +14,7 @@ def tracer_reseau(reseau, routes, bats, id_zone, crs) :
 
 
 def creer_reseaux_linestring(reseau, routes, id_zone, crs) :
+    # Retourne un linestring (ou point pour les batiments seuls) du reseau
     
     if len(reseau.nodes()) == 0 :
         return gpd.GeoDataFrame(), gpd.GeoDataFrame()
@@ -58,6 +59,7 @@ def creer_reseaux_linestring(reseau, routes, id_zone, crs) :
         return gpd.GeoDataFrame(), gpd.GeoDataFrame()
 
 def reseau_batiments_sans_route(bats, id_zone, crs) :
+    # Relie les batiments qui ne sont pas reliable par une route via une ligne droite
 
     nb_bats = bats.shape[0]
     bats_geometries =  bats.geometry

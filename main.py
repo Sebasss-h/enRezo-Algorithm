@@ -1,9 +1,9 @@
-### Calculate the optimal heat network in a given zone
+### Calculate optimal heat network for given opportunity zone and its characteristics
 
 from utils.import_db import import_db
 from utils.split_db import split_db
 from utils.projection_route import projection_route
-from utils.create_graph import create_graph
+from utils.creer_graph import creer_graph
 from utils.tree import tree
 from utils.tracer_reseau import tracer_reseau
 from utils.calcul_perf import calcul_perf
@@ -11,17 +11,40 @@ from utils.export_reseau import export_reseau
 from utils.merge_reseaux import merge_reseaux_cluster, merge_reseaux_combine
 from utils.trim_leaves import trim_leaves
 from utils.diametre import get_demande_totale
+
+import argparse
 from multiprocessing import Pool
 import time
 import csv
 
-### Variables globales ###
-trim = False
-combine = False
+### Argument Parser for global variable ###
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', '--verbeux', help='Booleen pour afficher les informations textuels')
+parser.add_argument('-t', '--trim', help='Booleen pour le trim des feuilles')
+parser.add_argument('-m', '--merge', help='Booleen pour le merge des zones opportunite')
+args = parser.parse_args()
+
+if args.verbeux :
+    verbeux = True
+else : verbeux = False
+
+if args.trim :
+    trim = True
+else : trim = False
+
+if args.merge :
+    merge = True
+else : merge = False
+
+
+### Definition des fonctions ###
 
 def worker_calcul(id_zone, bats, routes) :
+    # Premier worker pour le calcul en parallele : de la projection des batiments à l'arbre complet sur chaque zone
 
-    print(f"----- Calcul du réseau {id_zone} : {bats.shape[0]} batiments -----")
+    if verbeux :
+        print(f"----- Calcul du réseau {id_zone} : {bats.shape[0]} batiments -----")
 
     # 3.1 - Projection des batiments sur les routes
     td = time.time()
@@ -30,7 +53,7 @@ def worker_calcul(id_zone, bats, routes) :
 
     # 3.2 - Création des graph sur plusieurs clusters
     td = time.time()
-    G_list, bats  = create_graph(bats, routes)
+    G_list, bats  = creer_graph(bats, routes)
     d2 = time.time() - td
 
     # 3.3 - Steiner
@@ -51,8 +74,10 @@ def worker_calcul(id_zone, bats, routes) :
     return (id_zone, reseau, bats, routes)
 
 def worker_trace(id_zone, reseau, bats, routes) :
+    # Deuxieme worker pour le calcul en parallele : du trim au calcul des performances
 
-    print(f"----- Tracé du réseau {id_zone} : {bats.shape[0]} batiments -----")
+    if verbeux :
+        print(f"----- Tracé du réseau {id_zone} : {bats.shape[0]} batiments -----")
 
     crs = routes.crs
 
@@ -103,12 +128,11 @@ def main() :
 
     # 3 - On calcul les réseaux pour chaque zone d'interets avec du multiprocessing
     print("On calcul nos réseaux")
-    
     with Pool(processes = 8) as pool :
         list_reseaux = pool.starmap(worker_calcul, data_liste_calcul)
     
     # 4 - Regrouper les reseaux pour lequels on augmente la densité
-    if combine :
+    if merge :
         print("On combine nos zones d'intérets")
         reseaux_merged = merge_reseaux_combine(list_reseaux, routes_db, min_density=1.5, max_length=500)
     else :
@@ -116,7 +140,6 @@ def main() :
     
     # 5 - On trace les réseaux pour chaque zone d'interets avec du multiprocessing
     print("On trace nos réseaux")
-    
     with Pool(processes = 8) as pool :
         reseaux_finaux = pool.starmap(worker_trace, reseaux_merged)
     

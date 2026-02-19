@@ -1,4 +1,4 @@
-### Calculate perfromance (legnth, density) of the given heat network
+### Calcul les performance (length, density) du reseau
 
 def calcul_perf(reseau, bats) :
 

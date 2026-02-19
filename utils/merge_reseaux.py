@@ -1,6 +1,6 @@
-# Combine differents reseaux
+# Combine les reseauux : soit de cluster différents dans une même zone, ou de deux zones différentes
 
-from utils.create_graph import give_ends
+from utils.creer_graph import give_ends
 
 import shapely as shp
 import numpy as np
@@ -8,6 +8,7 @@ import geopandas as gpd
 import networkx as nx
 
 def merge_reseaux_cluster(reseaux, routes) :
+    # Combine les réseaux des différents clusters
 
     while len(reseaux) != 1 :
 
@@ -43,6 +44,7 @@ def merge_reseaux_cluster(reseaux, routes) :
     return reseaux[0]
 
 def merge_reseaux_combine(reseaux, routes, min_density = 1.5, max_length = 500, iteration = 3000) :
+    # Combine les réseaux des différentes zone si la desnité resultante est superieur au seuil
 
     for _ in range(iteration) :
 
@@ -77,6 +79,7 @@ def merge_reseaux_combine(reseaux, routes, min_density = 1.5, max_length = 500, 
     return reseaux
 
 def get_closest_nodes(T_1, T_2) :
+    # Retourne le couple de noeuds donnant la distance la plus petite entre les deux graphs
 
     n1 = ''
     n2 = ''
@@ -98,6 +101,7 @@ def get_closest_nodes(T_1, T_2) :
     return n1, n2, min_length
 
 def get_route(n1, n2, routes, straight_length) :
+    # Retourne la route la plus courte entre les deux sommets
 
     # Clip routes
     k = 50
@@ -146,6 +150,7 @@ def get_route(n1, n2, routes, straight_length) :
     return route
 
 def get_new_density(T_1, T_2, route) :
+    # Calcul la densite su nouveau reseau qui contient les deux zones
 
     demande_1 = sum(a['length'] for _,_,a in T_1.edges(data=True))
     demande_2 = sum(a['length'] for _,_,a in T_2.edges(data=True))
