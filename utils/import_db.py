@@ -10,12 +10,12 @@ def import_db(path) :
     return bats, routes, routes.crs, diametre_table
 
 def import_bats(path) :
-    bats = gpd.read_file(f"{path}/d44_batiment_zone.gpkg")
+    bats = gpd.read_file(f"{path}/batiment_zone.gpkg")
     bats = bats[["id_zone", "id_source", "besoin_chaud_2025", "geometry"]]
     return bats
 
 def import_routes(path) :
-    routes = gpd.read_file(f"{path}/troncon_de_route.gpkg")
+    routes = gpd.read_file(f"{path}/route.gpkg")
     routes = routes[["geometry"]]
     return routes
 
