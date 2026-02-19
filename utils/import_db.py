@@ -3,19 +3,19 @@
 import pandas as pd
 import geopandas as gpd
 
-def import_db() :
-    bats = import_bats()
-    routes = import_routes()
+def import_db(path) :
+    bats = import_bats(path)
+    routes = import_routes(path)
     diametre_table = import_diametre_table()
     return bats, routes, routes.crs, diametre_table
 
-def import_bats() :
-    bats = gpd.read_file("data/donnee_source/donnee_source/d44_batiment_zone.gpkg")
+def import_bats(path) :
+    bats = gpd.read_file(f"{path}/d44_batiment_zone.gpkg")
     bats = bats[["id_zone", "id_source", "besoin_chaud_2025", "geometry"]]
     return bats
 
-def import_routes() :
-    routes = gpd.read_file("data/donnee_source/donnee_source/troncon_de_route.gpkg")
+def import_routes(path) :
+    routes = gpd.read_file(f"{path}/troncon_de_route.gpkg")
     routes = routes[["geometry"]]
     return routes
 

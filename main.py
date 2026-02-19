@@ -20,10 +20,16 @@ import csv
 ### Argument Parser for global variable ###
 
 parser = argparse.ArgumentParser()
+parser.add_argument('path', help='Path to the folder with the input data')
 parser.add_argument('-v', '--verbeux', help='Booleen pour afficher les informations textuels')
 parser.add_argument('-t', '--trim', help='Booleen pour le trim des feuilles')
 parser.add_argument('-m', '--merge', help='Booleen pour le merge des zones opportunite')
 args = parser.parse_args()
+
+if args.path != None :
+    path = args.path
+else :
+    raise ValueError('Path to the data must be specified')
 
 if args.verbeux :
     verbeux = True
@@ -115,7 +121,7 @@ def main() :
 
     # 1 - On importe nos base de données
     print("On importe nos base de données")
-    bats_db, routes_db, crs, diametre_table = import_db()
+    bats_db, routes_db, crs, diametre_table = import_db(path)
 
     # 2 - On découpe nos base de données par zone d'interets
     print("On découpe nos base de données")
