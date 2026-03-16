@@ -20,5 +20,5 @@ def import_routes(path) :
     return routes
 
 def import_diametre_table() :
-    diametre_table = pd.read_excel('ressources/diametres.xlsx')
+    diametre_table = pd.read_excel('ressources/diametres.xlsx', sheet_name='Final')
     return diametre_table

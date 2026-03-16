@@ -4,6 +4,7 @@ import networkx as nx
 
 def get_diametre(reseau, diametre_table) :
     reseau['diametre'] = reseau['demande_total'].apply(lambda x : diametre_from_demande(x, diametre_table))
+    reseau['cout'] = reseau.apply(lambda row : cout_from_diametre(row , diametre_table), axis=1)
     return reseau
 
 def diametre_from_demande(x, diametre_table) :
@@ -15,7 +16,7 @@ def diametre_from_demande(x, diametre_table) :
     return diametre
 
 def get_demande_totale(T):
-    source = get_source(T)
+    source = get_source_max_demand(T)
 
     T_directed = nx.bfs_tree(T, source)
 
@@ -51,8 +52,21 @@ def get_demande_totale(T):
 
     return T_directed
 
-def get_source(T):
+def cout_from_diametre(row, diametre_table) :
+    dn, length = row['diametre'], row['length']
+    cout_metre = diametre_table[diametre_table["Diamètre Nominal (DN)"] == dn]['Cout (euros/m)'].values[0]
+    cout = round(cout_metre * length)
+    return cout
+
+
+def get_source_max_demand(T):
     nodes = list(T.nodes)
     if not nodes: return None
     source = max(nodes, key=lambda n: T.nodes[n].get("demande", 0))
+    return source
+
+def get_source_max_degrees(T):
+    nodes = list(T.nodes)
+    if not nodes: return None
+    source = max(nodes, key=lambda n: T.degree(n))
     return source

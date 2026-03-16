@@ -43,7 +43,7 @@ def merge_reseaux_cluster(reseaux, routes) :
 
     return reseaux[0]
 
-def merge_reseaux_combine(reseaux, routes, min_density = 1.5, max_length = 500, iteration = 3000) :
+def merge_reseaux_combine(reseaux, routes, min_density = 1.5, max_length = 1000, iteration = 3000) :
     # Combine les réseaux des différentes zone si la desnité resultante est superieur au seuil
 
     for _ in range(iteration) :
